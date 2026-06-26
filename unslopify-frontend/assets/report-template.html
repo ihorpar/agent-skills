@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{PROJECT_NAME}} - frontend slop audit</title>
+  <style>
+    :root {
+      --paper: #f6f3ec;
+      --ink: #171714;
+      --muted: #68665f;
+      --line: #cbc6ba;
+      --accent: #b54424;
+      --accent-soft: #efe0d6;
+      --good: #27614c;
+      --content: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Aptos, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-underline-offset: 0.18em;
+    }
+
+    header,
+    main,
+    footer {
+      width: min(calc(100% - 40px), var(--content));
+      margin-inline: auto;
+    }
+
+    header {
+      padding: 72px 0 40px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 750;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      line-height: 1.08;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(2.7rem, 8vw, 6.8rem);
+      letter-spacing: -0.055em;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 4.5vw, 4.1rem);
+      letter-spacing: -0.04em;
+    }
+
+    h3 {
+      font-size: clamp(1.45rem, 2.5vw, 2.2rem);
+      letter-spacing: -0.025em;
+    }
+
+    .lede {
+      max-width: 720px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: clamp(1.06rem, 2vw, 1.35rem);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 30px;
+      margin: 34px 0 0;
+      padding: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      list-style: none;
+    }
+
+    main {
+      padding-bottom: 96px;
+    }
+
+    section {
+      padding: 76px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-intro {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.65fr) minmax(280px, 1.35fr);
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 44px;
+    }
+
+    .section-intro p {
+      max-width: 650px;
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 1.04rem;
+    }
+
+    .context-frame,
+    .visual-frame {
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .context-frame img,
+    .visual-frame img {
+      width: 100%;
+      height: auto;
+    }
+
+    .caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .finding {
+      padding: 64px 0 80px;
+    }
+
+    .finding + .finding {
+      border-top: 1px solid var(--line);
+    }
+
+    .finding-head {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) minmax(220px, 0.55fr);
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 34px;
+    }
+
+    .rank {
+      color: var(--accent);
+      font: 500 2.2rem/1 Georgia, "Times New Roman", serif;
+    }
+
+    .severity {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .severity strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .comparison h4 {
+      margin: 0 0 10px;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .comparison .after h4 {
+      color: var(--good);
+    }
+
+    .finding-notes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 30px;
+      margin-top: 34px;
+    }
+
+    .finding-notes h4,
+    .plan h3 {
+      margin: 0 0 7px;
+      font: 750 0.78rem/1.2 Aptos, "Segoe UI", sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .finding-notes p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .audit {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .audit th {
+      padding: 0 14px 14px 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .audit td {
+      padding: 18px 18px 18px 0;
+      border-top: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .audit td:first-child {
+      width: 30%;
+      font-weight: 700;
+    }
+
+    .audit td:last-child {
+      color: var(--muted);
+    }
+
+    .plan {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 42px;
+    }
+
+    .plan p,
+    .plan ol,
+    .plan ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      color: var(--muted);
+    }
+
+    .plan p {
+      padding-left: 0;
+    }
+
+    footer {
+      padding: 30px 0 54px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 760px) {
+      header {
+        padding-top: 48px;
+      }
+
+      section {
+        padding: 56px 0;
+      }
+
+      .section-intro,
+      .finding-head,
+      .comparison,
+      .finding-notes,
+      .plan {
+        grid-template-columns: 1fr;
+      }
+
+      .finding-head {
+        gap: 12px;
+      }
+
+      .rank {
+        font-size: 1.5rem;
+      }
+
+      .comparison {
+        gap: 34px;
+      }
+    }
+
+    @media print {
+      :root {
+        --paper: #fff;
+      }
+
+      header,
+      main,
+      footer {
+        width: 100%;
+      }
+
+      body {
+        padding: 0 18mm;
+      }
+
+      header {
+        padding-top: 18mm;
+      }
+
+      section,
+      .finding {
+        break-inside: avoid;
+      }
+
+      a {
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Frontend slop audit</p>
+    <h1>{{PROJECT_NAME}}</h1>
+    <p class="lede">{{AUDIT_SUMMARY}}</p>
+    <ul class="meta" aria-label="Audit details">
+      <li>{{SCREEN_OR_FLOW}}</li>
+      <li>{{VIEWPORTS}}</li>
+      <li>{{AUDIT_DATE}}</li>
+    </ul>
+  </header>
+
+  <main>
+    <section aria-labelledby="context-title">
+      <div class="section-intro">
+        <h2 id="context-title">Current surface</h2>
+        <p>{{CONTEXT_DESCRIPTION}}</p>
+      </div>
+      <figure>
+        <div class="context-frame">
+          <img src="{{FULL_BEFORE_IMAGE}}" alt="{{FULL_BEFORE_ALT}}">
+        </div>
+        <figcaption class="caption">{{FULL_BEFORE_CAPTION}}</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="top-findings-title">
+      <div class="section-intro">
+        <h2 id="top-findings-title">Three changes with the most leverage</h2>
+        <p>These are distinct root causes, ranked by user impact, prevalence, task interference, evidence confidence, and fix leverage.</p>
+      </div>
+
+      <article class="finding">
+        <div class="finding-head">
+          <div class="rank" aria-label="Rank 1">01</div>
+          <h3>{{FINDING_1_TITLE}}</h3>
+          <p class="severity"><strong>{{FINDING_1_CLASSIFICATION}}</strong><br>{{FINDING_1_SCORE}} / 15</p>
+        </div>
+
+        <div class="comparison">
+          <figure>
+            <h4>Before</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_1_BEFORE_IMAGE}}" alt="{{FINDING_1_BEFORE_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_1_BEFORE_CAPTION}}</figcaption>
+          </figure>
+          <figure class="after">
+            <h4>Proposed after</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_1_AFTER_IMAGE}}" alt="{{FINDING_1_AFTER_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_1_AFTER_CAPTION}}</figcaption>
+          </figure>
+        </div>
+
+        <div class="finding-notes">
+          <div>
+            <h4>Evidence</h4>
+            <p>{{FINDING_1_EVIDENCE}}</p>
+          </div>
+          <div>
+            <h4>Why it matters</h4>
+            <p>{{FINDING_1_IMPACT}}</p>
+          </div>
+          <div>
+            <h4>Smallest credible fix</h4>
+            <p>{{FINDING_1_FIX}}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="finding">
+        <div class="finding-head">
+          <div class="rank" aria-label="Rank 2">02</div>
+          <h3>{{FINDING_2_TITLE}}</h3>
+          <p class="severity"><strong>{{FINDING_2_CLASSIFICATION}}</strong><br>{{FINDING_2_SCORE}} / 15</p>
+        </div>
+
+        <div class="comparison">
+          <figure>
+            <h4>Before</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_2_BEFORE_IMAGE}}" alt="{{FINDING_2_BEFORE_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_2_BEFORE_CAPTION}}</figcaption>
+          </figure>
+          <figure class="after">
+            <h4>Proposed after</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_2_AFTER_IMAGE}}" alt="{{FINDING_2_AFTER_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_2_AFTER_CAPTION}}</figcaption>
+          </figure>
+        </div>
+
+        <div class="finding-notes">
+          <div>
+            <h4>Evidence</h4>
+            <p>{{FINDING_2_EVIDENCE}}</p>
+          </div>
+          <div>
+            <h4>Why it matters</h4>
+            <p>{{FINDING_2_IMPACT}}</p>
+          </div>
+          <div>
+            <h4>Smallest credible fix</h4>
+            <p>{{FINDING_2_FIX}}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="finding">
+        <div class="finding-head">
+          <div class="rank" aria-label="Rank 3">03</div>
+          <h3>{{FINDING_3_TITLE}}</h3>
+          <p class="severity"><strong>{{FINDING_3_CLASSIFICATION}}</strong><br>{{FINDING_3_SCORE}} / 15</p>
+        </div>
+
+        <div class="comparison">
+          <figure>
+            <h4>Before</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_3_BEFORE_IMAGE}}" alt="{{FINDING_3_BEFORE_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_3_BEFORE_CAPTION}}</figcaption>
+          </figure>
+          <figure class="after">
+            <h4>Proposed after</h4>
+            <div class="visual-frame">
+              <img src="{{FINDING_3_AFTER_IMAGE}}" alt="{{FINDING_3_AFTER_ALT}}">
+            </div>
+            <figcaption class="caption">{{FINDING_3_AFTER_CAPTION}}</figcaption>
+          </figure>
+        </div>
+
+        <div class="finding-notes">
+          <div>
+            <h4>Evidence</h4>
+            <p>{{FINDING_3_EVIDENCE}}</p>
+          </div>
+          <div>
+            <h4>Why it matters</h4>
+            <p>{{FINDING_3_IMPACT}}</p>
+          </div>
+          <div>
+            <h4>Smallest credible fix</h4>
+            <p>{{FINDING_3_FIX}}</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section aria-labelledby="remaining-title">
+      <div class="section-intro">
+        <h2 id="remaining-title">Remaining audit</h2>
+        <p>Secondary findings stay compact so they do not compete with the proposed direction.</p>
+      </div>
+      <table class="audit">
+        <thead>
+          <tr>
+            <th scope="col">Finding</th>
+            <th scope="col">Class</th>
+            <th scope="col">Evidence and correction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{SECONDARY_FINDING}}</td>
+            <td>{{SECONDARY_CLASSIFICATION}}</td>
+            <td>{{SECONDARY_EVIDENCE_AND_FIX}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="plan-title">
+      <div class="section-intro">
+        <h2 id="plan-title">Implementation plan</h2>
+        <p>{{PLAN_SUMMARY}}</p>
+      </div>
+      <div class="plan">
+        <div>
+          <h3>Change</h3>
+          <ol>
+            <li>{{PLAN_STEP_1}}</li>
+            <li>{{PLAN_STEP_2}}</li>
+            <li>{{PLAN_STEP_3}}</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Preserve</h3>
+          <ul>
+            <li>{{PRESERVE_1}}</li>
+            <li>{{PRESERVE_2}}</li>
+            <li>{{PRESERVE_3}}</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Risks and decisions</h3>
+          <ul>
+            <li>{{RISK_1}}</li>
+            <li>{{RISK_2}}</li>
+            <li>{{OPEN_DECISION}}</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Generated from the rendered interface and repository evidence. Taste-only observations are excluded from automatic fixes.
+  </footer>
+</body>
+</html>

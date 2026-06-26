@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Review"
+  short_description: "Review code-related plans and classify findings"
+  default_prompt: "Review the attached code-related plan with a sub-agent, then triage the returned findings into accepted and rejected with brief reasons."

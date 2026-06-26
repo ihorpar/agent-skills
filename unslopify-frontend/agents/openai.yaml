@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unslopify Frontend"
+  short_description: "Detect and remove generic AI frontend slop"
+  default_prompt: "Use $unslopify-frontend to audit this interface and propose a restrained, evidence-based redesign."
