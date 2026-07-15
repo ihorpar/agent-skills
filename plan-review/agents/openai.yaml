@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan Review"
-  short_description: "Review code-related plans and classify findings"
-  default_prompt: "Review the attached code-related plan with a sub-agent, then triage the returned findings into accepted and rejected with brief reasons."
+  short_description: "Review plans and apply accepted findings"
+  default_prompt: "Use $plan-review to review this code-related plan with a fresh sub-agent, apply accepted findings to the plan, and report accepted and rejected findings."
