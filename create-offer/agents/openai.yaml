@@ -1,0 +1,7 @@
+interface:
+  display_name: "Create Offer"
+  short_description: "Create and polish client offers"
+  default_prompt: "Use $create-offer to turn my notes into a clear client-facing offer."
+
+policy:
+  allow_implicit_invocation: true

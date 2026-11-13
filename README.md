@@ -4,6 +4,7 @@ This repository collects reusable Codex skills.
 
 ## Skills
 
+- `create-offer`
 - `plan-implement`
 - `plan-orchestrate`
 - `plan-review`
