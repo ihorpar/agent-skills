@@ -1,4 +1,7 @@
 interface:
   display_name: "Plan Implement"
-  short_description: "Implement plans milestone by milestone with review loops"
-  default_prompt: "Implement the provided plan milestone by milestone. After each milestone, run the fastest relevant checks, launch a fresh sub-agent to review the uncommitted changes using the plan, current milestone scope, and acceptance criteria, then triage the findings, fix accepted issues, update the plan notes, and continue."
+  short_description: "Explicitly requested milestone implementation with review loops"
+  default_prompt: "Use $plan-implement as the single implementer to execute the current plan milestone by milestone, obtain independent reviews, resolve findings, and keep the plan current through completion."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,54 +1,51 @@
 ---
 name: plan-review
-description: Use only when the user explicitly asks to review or critique a plan, names plan-review, or requests a sub-agent plan review. Reviews code-related plans, applies accepted findings to the plan by default, and reports accepted and rejected findings. Do not invoke for ordinary plan creation, implementation, or general code reviews.
+description: Use only when the user explicitly asks to review or critique a code-related plan, names plan-review/$plan-review, or requests a subagent plan review. Independently reviews the plan, applies accepted findings by default, and reports finding dispositions. Do not invoke for ordinary plan creation, implementation, or general code reviews.
 ---
 
 # Plan Review
 
-Use this skill only after an explicit request to review a plan. It is intended primarily for code-related plans covering features, refactors, migrations, rollouts, and similar engineering work.
+Review engineering plans for implementation realism, missing requirements, and material risks.
 
 ## Modes
 
-- **Apply mode (default):** Review the plan, triage every finding, and update the plan with every accepted finding before responding.
-- **Review-only mode:** Only use when the user explicitly asks for feedback without changing the plan, or says not to modify it.
+- **Apply mode, default:** Review, triage every finding, and update the plan with accepted changes before responding.
+- **Review-only mode:** Leave the plan unchanged when the user explicitly asks for feedback without edits.
 
-"Apply" means update the plan, not implement the code. Code implementation belongs to `plan-implement`.
+This skill changes the plan only. Use `plan-implement` when the user requests milestone execution with independent reviews; ordinary implementation does not require that workflow.
 
-## Workflow
+## Context and independent review
 
-1. Locate and read the complete plan. Read only the repository files needed to evaluate its implementation realism, assumptions, and dependencies.
-2. Launch one fresh sub-agent to review the plan. Pass the plan, relevant repository context, expected behavior, acceptance criteria, and current milestone when applicable. Do not pass prior review history, the main agent's analysis, or intended conclusions.
-3. Ask the sub-agent for concrete findings only, grounded in repository structure and testable implementation details. Ask it to identify severity and plan section or file/line evidence where available.
-4. Triage every finding in the main agent:
-   - **Accept** findings that are valid, material, and worth addressing.
-   - **Reject** findings that are unsupported, based on a misunderstanding, duplicate, too speculative, or not important enough. Record a brief reason.
-5. In apply mode, immediately update the plan with every accepted finding. Add or revise implementation steps, sequencing, dependencies, acceptance criteria, tests, rollout notes, risks, or milestone tracker entries as needed. Preserve the plan's existing structure and keep all checklist/change notes accurate.
-6. Re-read the updated plan and check for contradictions, missing dependencies, and incomplete acceptance criteria. Do not claim that a finding was applied unless the plan actually reflects it.
-7. In review-only mode, leave the plan unchanged and report proposed changes instead.
+Locate and read the complete current plan and repository files needed to evaluate its assumptions and dependencies. Launch one fresh reviewer session without inherited conversation; use `fork_turns: "none"` where supported. If the environment cannot launch an independent reviewer, prepare the self-contained handoff and report that independent review is pending; do not describe self-review as independent review. The reviewer is read-only and must not edit the plan, change code, or mutate the repository.
 
-## What To Look For
+Provide a self-contained packet with the repository location, current plan, applicable repository instructions, relevant repository context, expected behavior, acceptance criteria, and current milestone when applicable. Omit prior review history from the packet and avoid forwarding the main agent's analysis, anticipated findings, or desired verdict.
 
-Ask the sub-agent to focus on:
+Include a few brief notes on relevant intentional behavior and accepted tradeoffs, with each decision's reason and known downside. Extract established user requirements, current plan decisions, or documented implementation rationale; do not invent retrospective justifications. Ask the user only when an unresolved decision materially affects correctness and cannot be resolved from available evidence.
 
-- missing implementation steps
-- missing or inadequate milestone tracker structure
-- milestone tracking that is only meant to be updated at the end instead of during execution
-- incorrect assumptions about the codebase
-- broken sequencing or dependencies
-- API, schema, or contract mismatches
-- edge cases and failure modes
-- test coverage gaps
-- backward compatibility, migration, or rollout risks
-- performance, security, or maintainability concerns when material
+Design notes are context, not exemptions. Ask the reviewer to check whether the plan honors the decisions and whether their assumptions still hold. It may challenge decisions with evidence of material problems, distinguishing a design concern from a missing or incorrect implementation step.
 
-Use appropriate reasoning effort for the scope, usually medium. Use higher reasoning for migration, data integrity, runtime safety, or other high-risk work.
+Let the reviewer choose how to investigate missing steps, unsupported assumptions, sequencing, contracts, validation, and material migration, compatibility, security, performance, or maintenance risks. Assess whether progress and completion can be tracked reliably without imposing unnecessary template changes.
 
-## Final Response
+Use reasoning effort appropriate to the scope, usually medium and higher for migration, data integrity, or runtime safety. Request concrete findings ordered by severity, with plan-section or file-and-line evidence, the triggering condition, and resulting failure or material impact. Separate demonstrated problems from unresolved questions. Missing tests alone are not a defect without identifying the behavior left unverified. No material findings is a valid result.
 
-Keep the response concise and report:
+## Main-agent resolution
 
-- accepted findings and how each was incorporated into the plan
-- rejected findings and the brief reason for each rejection
-- any low-confidence areas or residual risks
+Check whether the plan preserves the original intent and any working prototype's required interface and interactions. Distinguish hard constraints, outcomes, preferences, and assumptions. Look for unnecessary scope, premature abstractions, expensive safeguards without a material failure case, and simpler sufficient approaches. Do not demand a simplification or extra feature when none is warranted. Consider both likelihood and impact of failure.
 
-If there are no findings, say the plan looks sound and mention any low-confidence areas. If the plan was inline or not writable, state that the accepted changes were returned as proposed edits rather than written to a file.
+For orchestrated plans, check decision authority, submitted-versus-accepted status, milestone dependencies and worktree bases, integration ownership, proportionate review requirements, and early verification of the main uncertainty. Require only the detail needed to prevent a concrete execution error; do not impose a new bureaucracy on small plans.
+
+When an orchestrator owns the canonical plan, return proposed changes to that owner unless explicitly assigned editing authority. This ownership rule takes precedence over default apply mode. Report proposed changes as unapplied until the owner records them.
+
+Independently cross-check every finding against repository evidence, user requirements, and the current plan. Classify each as:
+
+- **Accept:** Valid, material, and appropriate to address within the current scope.
+- **Reject:** Unsupported, incorrect, duplicate, immaterial, or inconsistent with a justified requirement or tradeoff without demonstrating a material problem in that decision. Explain why; "by design" alone is insufficient.
+- **Defer:** Valid but outside the current scope. Record the reason and impact without silently expanding the plan.
+
+In apply mode, update the plan with every accepted finding. Use [plan-build](../plan-build/SKILL.md) for persistent plan maintenance and lifecycle while preserving useful existing structure and history. Revise steps, sequencing, acceptance criteria, validation, or risk notes as needed. Revalidate affected completion claims; do not mark proposed work completed or relax required outcomes merely to close a finding.
+
+Re-read the updated plan for contradictions, missing dependencies, and incomplete acceptance criteria. Do not claim a finding was applied unless the plan reflects it. In review-only mode, report proposed changes instead. For an inline or unwritable plan, return concrete proposed edits and state that no file was changed.
+
+## Final response
+
+Report accepted findings and how they were incorporated or proposed, rejected and deferred findings with brief reasons, and any low-confidence areas or residual risks. If there are no material findings, say so without implying that code or runtime behavior was validated.
